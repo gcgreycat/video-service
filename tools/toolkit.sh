@@ -2,6 +2,9 @@
 
 export $(grep -v '^#' .env | xargs -d '\n')
 
+printenv uid
+printenv gid
+
 script=$(readlink -f "$0")
 project_path=$(dirname "$script")
 

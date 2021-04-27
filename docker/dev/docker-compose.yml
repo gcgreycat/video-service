@@ -2,8 +2,6 @@ version: "3.8"
 services:
   php-fpm:
     image: php:7.1-fpm-alpine
-    ports:
-      - 9000:9000
     volumes:
       - ../../application:/var/www/html
       - ./php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
@@ -16,4 +14,16 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - 8080:80
+      - 127:0:0:1:8080:80
+
+  mysql:
+    image: mysql:8
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=video_service
+      - MYSQL_USER=db_user
+      - MYSQL_PASSWORD=db_password
+    ports:
+    - 127.0.0.1:3306:3306
