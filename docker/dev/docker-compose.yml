@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   php-fpm:
-    image: php:7.1-fpm-alpine
+    build: ./php-fpm
     volumes:
       - ../../application:/var/www/html
       - ./php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
@@ -19,6 +19,7 @@ services:
   mysql:
     image: mysql:8
     volumes:
+      - ./mysql/conf.d/authentication-plugin.cnf:/etc/mysql/conf.d/authentication-plugin.cnf
       - ./mysql/data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
