@@ -26,6 +26,9 @@ class CreateSubscriptionRelations extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('subscription_relations');
+        Schema::table('subscriptions', function (Blueprint $table) {
+            $table->dropForeign('user_id');
+            $table->dropForeign('package_id');
+        });
     }
 }

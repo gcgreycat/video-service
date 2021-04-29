@@ -2,11 +2,23 @@
 
 namespace App\Models;
 
+use DateTime;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Class User
+ * @package App\Models
+ * @property int $id
+ * @property string $login
+ * @property string $password
+ * @property string $token
+ * @property DateTime $token_expire_at
+ */
 class User extends Model
 {
+    public $timestamps = false;
     /**
      * The attributes that are mass assignable.
      *
@@ -40,5 +52,10 @@ class User extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function packages(): BelongsToMany
+    {
+        return $this->belongsToMany(Package::class, 'subscriptions');
     }
 }

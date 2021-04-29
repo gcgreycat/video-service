@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int $id
  * @property string $title
  * @property bool $is_free
- * @property DateTime $purchase_duration
+ * @property int $purchase_duration
  */
 class Video extends Model
 {
@@ -26,7 +26,6 @@ class Video extends Model
 
     public $casts = [
         'is_free' => 'boolean',
-        'purchase_duration' => 'datetime',
     ];
 
     public function packages(): BelongsToMany

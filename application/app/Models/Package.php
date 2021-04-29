@@ -19,6 +19,11 @@ class Package extends Model
 
     public function videos(): BelongsToMany
     {
-        return $this->belongsToMany(Package::class, 'package_video');
+        return $this->belongsToMany(Video::class, 'package_video');
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'subscriptions');
     }
 }
