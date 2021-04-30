@@ -13,8 +13,12 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth')->group(function () {
+    Route::post('/subscription/create', [\App\Http\Controllers\SubscriptionController::class, 'create']);
+    Route::put('/subscription/edit', [\App\Http\Controllers\SubscriptionController::class, 'edit']);
+    Route::delete('/subscription/delete', [\App\Http\Controllers\SubscriptionController::class, 'delete']);
+
+    Route::get('/video/list', [\App\Http\Controllers\VideoController::class, 'list']);
 });
 
 Route::post('/login', [\App\Http\Controllers\Api\LoginController::class, 'login'])->name('api.login');

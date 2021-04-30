@@ -73,6 +73,11 @@ class User extends Model implements Authenticatable
         return $this->belongsToMany(Package::class, 'subscriptions');
     }
 
+    public function videos()
+    {
+        $this->packages()->videos();
+    }
+
     /**
      * @throws Exception
      */
@@ -80,5 +85,17 @@ class User extends Model implements Authenticatable
     {
         $this->token = bin2hex(random_bytes(16));
         $this->token_expired_at = (new DateTime())->add(new DateInterval('PT1H'));
+    }
+
+    public function subscribeOnPackage(int $packageId): Subscription
+    {
+        $this->packages()->attach($packageId, [
+            'time_start_at' => new DateTime(),
+        ]);
+        return $this->subscriptions()
+            ->where('package_id', $packageId)
+            ->orderBy('time_start_at', 'desc')
+            ->limit(1)
+            ->first();
     }
 }
