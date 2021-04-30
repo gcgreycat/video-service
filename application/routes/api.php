@@ -16,3 +16,9 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/login', [\App\Http\Controllers\Api\LoginController::class, 'login'])->name('api.login');
+
+Route::fallback(function () {
+    return response()->json(['message' => 'Not Found'], 404);
+})->name('api.fallback.404');

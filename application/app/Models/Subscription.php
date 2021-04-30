@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Class Subscription
  * @package App\Models
  * @property int $id
- * @property DateTime $time_start_at
+ * @property Carbon $time_start_at
  * @property int $package_id
  * @property int $user_id
  */
