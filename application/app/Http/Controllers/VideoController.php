@@ -11,22 +11,19 @@ class VideoController extends Controller
 {
     public function list(PaginableRequest $request): JsonResponse
     {
-        $page = $request->page ?? 1;
         $perPage = $request->perPage ?? 20;
 
         /** @var User $user */
         $user = auth()->user();
-        $count = Video::countByUser($user);
-        if (empty($count)) {
-            return response()->json(['total' => $count, 'videos' => []]);
-        }
 
-        $videos = Video::getByUser($user, $perPage, $perPage * ($page - 1))->map(function (Video $video) {
+        $pagination = Video::byUser($user)->paginate($perPage);
+        $videos = array_map(function (Video $video) {
             return [
                 'id' => $video->id,
                 'title' => $video->title,
             ];
-        });
-        return response()->json(['total' => $count, 'videos' => $videos]);
+        }, $pagination->items());
+
+        return response()->json(['total' => $pagination->total(), 'videos' => $videos]);
     }
 }

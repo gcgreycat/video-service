@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Class Video
@@ -14,6 +13,10 @@ use Illuminate\Support\Facades\DB;
  * @property string $title
  * @property bool $is_free
  * @property int $purchase_duration
+ *
+ * @method static Builder paidByUser(User $user)
+ * @method static Builder free()
+ * @method static Builder byUser(User $user)
  */
 class Video extends Model
 {
@@ -34,52 +37,35 @@ class Video extends Model
         return $this->belongsToMany(Package::class, 'package_video');
     }
 
-    public static function getByUser(User $user, int $limit = 0, int $offset = 0): Collection
+    public function scopePaidByUser(Builder $query, User $user): Builder
     {
-        $with = static::getByUserWithSql($user);
-        $sql = $with . ' select * from distinct_user_videos';
+        $dateAdd = 'date_add(subscriptions.time_start_at, interval videos.purchase_duration second)';
 
-        if ($limit) {
-            $sql .= ' LIMIT ' . $limit;
-        }
-        if ($offset) {
-            $sql .= ' OFFSET ' . $offset;
-        }
-
-        return static::query()->fromQuery($sql);
+        return $query->select('videos.*')
+            ->where('videos.is_free', 0)
+            ->crossJoin('package_video', 'videos.id', '=', 'package_video.video_id')
+            ->crossJoin('subscriptions', 'package_video.package_id', '=', 'subscriptions.package_id')
+            ->where('subscriptions.user_id', $user->id)
+            ->whereRaw(sprintf('%s > now()', $dateAdd))
+            ->groupBy(['videos.id', 'videos.title', 'videos.is_free', 'videos.purchase_duration'])
+            ->orderByRaw(sprintf('max(%s) desc', $dateAdd));
     }
 
-    public static function countByUser(User $user): int
+    public static function scopeFree(Builder $query): Builder
     {
-        $with = static::getByUserWithSql($user);
-        $result = DB::selectOne($with . ' select count(*) as count from distinct_user_videos');
-        return $result->count;
+        return $query->where('is_free', 1);
     }
 
-    private static function getByUserWithSql(User $user): string
+    public static function scopeByUser(Builder $query, User $user): Builder
     {
-        $videos = static::getUserVideoSql($user);
-        return <<<SQL
-with user_videos as (
-    {$videos}
-), distinct_user_videos as (
-    select * from user_videos
-    group by user_videos.id, user_videos.title, user_videos.is_free, user_videos.purchase_duration
-)
-SQL;
-    }
-
-    private static function getUserVideoSql(User $user): string
-    {
-        return <<<SQL
-select videos.*
-    from video_service.videos
-             inner join video_service.package_video on videos.id = package_video.video_id
-             inner join video_service.packages on package_video.package_id = packages.id
-             inner join video_service.subscriptions on packages.id = subscriptions.package_id
-    where subscriptions.user_id = {$user->id}
-      and subscriptions.time_start_at + INTERVAL videos.purchase_duration SECOND > now()
-    order by subscriptions.time_start_at + INTERVAL videos.purchase_duration SECOND desc
-SQL;
+        return static::paidByUser($user)
+            ->selectRaw('max(date_add(subscriptions.time_start_at, interval videos.purchase_duration second)) as time_stop_at')
+            ->union(
+                static::free()->select('videos.*')
+                    ->selectRaw('date_add(now(), interval purchase_duration second) as time_stop_at')
+                    ->getQuery()
+            )
+            ->orderBy('is_free')
+            ->orderByDesc('time_stop_at');
     }
 }
